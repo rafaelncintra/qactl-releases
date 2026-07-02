@@ -36,15 +36,33 @@ try {
     return
 }
 
-# 3. PATH
+# 3. Remover instalacao conflitante via pipx
+Write-Host "  Verificando instalacoes anteriores..." -NoNewline
+if (Get-Command pipx -ErrorAction SilentlyContinue) {
+    $pipxList = pipx list --short 2>$null
+    if ($pipxList -match '^qactl\b') {
+        Write-Host ""
+        Write-Host "  Removendo instalacao anterior via pipx..." -NoNewline
+        try {
+            pipx uninstall qactl 2>&1 | Out-Null
+            Write-Host " OK" -ForegroundColor Green
+        } catch {
+            Write-Host " aviso (nao critico): $_" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host " OK" -ForegroundColor Green
+    }
+} else {
+    Write-Host " OK" -ForegroundColor Green
+}
+
+# 4. PATH
 Write-Host "  Configurando PATH..." -NoNewline
 $userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
-if ($userPath -notlike "*$installDir*") {
-    [Environment]::SetEnvironmentVariable("PATH", "$userPath;$installDir", "User")
-    Write-Host " OK" -ForegroundColor Green
-} else {
-    Write-Host " ja configurado" -ForegroundColor Yellow
-}
+$parts = @($userPath -split ';' | Where-Object { $_ -and $_ -ne $installDir })
+$newPath = (@($installDir) + $parts) -join ';'
+[Environment]::SetEnvironmentVariable("PATH", $newPath, "User")
+Write-Host " OK" -ForegroundColor Green
 
 # Notifica o Windows para recarregar o PATH em novos terminais
 if (-not ("Win32.NativeMethods" -as [type])) {
@@ -60,7 +78,7 @@ $result = [UIntPtr]::Zero
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH","Machine") + ";" +
             [Environment]::GetEnvironmentVariable("PATH","User")
 
-# 4. Validar
+# 5. Validar
 Write-Host "  Validando instalacao..." -NoNewline
 try {
     $installed = & "$installDir\qactl.exe" --version 2>&1
