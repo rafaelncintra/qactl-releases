@@ -49,11 +49,24 @@ Write-Host "  Configurando PATH..." -NoNewline
 $userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 if ($userPath -notlike "*$installDir*") {
     [Environment]::SetEnvironmentVariable("PATH", "$userPath;$installDir", "User")
-    $env:PATH = "$env:PATH;$installDir"
     Write-Host " OK" -ForegroundColor Green
 } else {
     Write-Host " ja configurado" -ForegroundColor Yellow
 }
+
+# Notifica o Windows para recarregar o PATH em novos terminais
+if (-not ("Win32.NativeMethods" -as [type])) {
+    Add-Type -Namespace Win32 -Name NativeMethods -MemberDefinition @"
+      [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
+      public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam,
+        string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
+"@
+}
+$result = [UIntPtr]::Zero
+[Win32.NativeMethods]::SendMessageTimeout([IntPtr]0xffff, 0x1a, [UIntPtr]::Zero,
+    "Environment", 2, 5000, [ref]$result) | Out-Null
+$env:PATH = [Environment]::GetEnvironmentVariable("PATH","Machine") + ";" +
+            [Environment]::GetEnvironmentVariable("PATH","User")
 
 # 5. Validar
 Write-Host "  Validando instalacao..." -NoNewline
