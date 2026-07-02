@@ -1,6 +1,5 @@
 # qactl installer
 # Uso: irm https://raw.githubusercontent.com/rafaelncintra/qactl-releases/main/install.ps1 | iex
-$ErrorActionPreference = 'Stop'
 
 $repo      = "rafaelncintra/qactl-releases"
 $installDir = "$env:APPDATA\qactl"
@@ -20,7 +19,7 @@ try {
 } catch {
     Write-Host " FALHOU" -ForegroundColor Red
     Write-Host "  Erro ao consultar GitHub: $_"
-    exit 1
+    return
 }
 
 # 2. Download
@@ -33,16 +32,22 @@ try {
 } catch {
     Write-Host " FALHOU" -ForegroundColor Red
     Write-Host "  Erro ao baixar: $_"
-    exit 1
+    return
 }
 
 # 3. Instalar
 Write-Host "  Instalando em $installDir..." -NoNewline
-New-Item -ItemType Directory -Force -Path $installDir | Out-Null
-Unblock-File -Path $tmpExe
-Copy-Item $tmpExe "$installDir\qactl.exe" -Force
-Remove-Item $tmpExe -Force
-Write-Host " OK" -ForegroundColor Green
+try {
+    New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+    Unblock-File -Path $tmpExe
+    Copy-Item $tmpExe "$installDir\qactl.exe" -Force
+    Remove-Item $tmpExe -Force
+    Write-Host " OK" -ForegroundColor Green
+} catch {
+    Write-Host " FALHOU" -ForegroundColor Red
+    Write-Host "  Erro ao instalar: $_"
+    return
+}
 
 # 4. PATH
 Write-Host "  Configurando PATH..." -NoNewline
@@ -70,12 +75,18 @@ $env:PATH = [Environment]::GetEnvironmentVariable("PATH","Machine") + ";" +
 
 # 5. Validar
 Write-Host "  Validando instalacao..." -NoNewline
-$installed = & "$installDir\qactl.exe" --version 2>&1
-if ($LASTEXITCODE -eq 0) {
-    Write-Host " $installed" -ForegroundColor Green
-} else {
+try {
+    $installed = & "$installDir\qactl.exe" --version 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host " $installed" -ForegroundColor Green
+    } else {
+        Write-Host " FALHOU (exit $LASTEXITCODE)" -ForegroundColor Red
+        return
+    }
+} catch {
     Write-Host " FALHOU" -ForegroundColor Red
-    exit 1
+    Write-Host "  Erro: $_"
+    return
 }
 
 Write-Host ""
