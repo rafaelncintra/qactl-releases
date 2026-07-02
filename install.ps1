@@ -10,22 +10,10 @@ Write-Host " — instalador"
 Write-Host "  ─────────────────────────────────────────"
 Write-Host ""
 
-# 1. Versão mais recente
-Write-Host "  Verificando versao disponivel..." -NoNewline
-try {
-    $release = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest"
-    $version = $release.tag_name
-    Write-Host " $version" -ForegroundColor Green
-} catch {
-    Write-Host " FALHOU" -ForegroundColor Red
-    Write-Host "  Erro ao consultar GitHub: $_"
-    return
-}
-
-# 2. Download
-$url    = "https://github.com/$repo/releases/download/$version/qactl.exe"
+# 1. Download (URL permanente do ultimo release — sem chamada de API)
+$url    = "https://github.com/$repo/releases/latest/download/qactl.exe"
 $tmpExe = Join-Path $env:TEMP "qactl-download.exe"
-Write-Host "  Baixando qactl.exe $version..." -NoNewline
+Write-Host "  Baixando qactl.exe..." -NoNewline
 try {
     Invoke-WebRequest -Uri $url -OutFile $tmpExe -UseBasicParsing
     Write-Host " OK" -ForegroundColor Green
@@ -35,7 +23,7 @@ try {
     return
 }
 
-# 3. Instalar
+# 2. Instalar
 Write-Host "  Instalando em $installDir..." -NoNewline
 try {
     New-Item -ItemType Directory -Force -Path $installDir | Out-Null
@@ -49,7 +37,7 @@ try {
     return
 }
 
-# 4. PATH
+# 3. PATH
 Write-Host "  Configurando PATH..." -NoNewline
 $userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 if ($userPath -notlike "*$installDir*") {
@@ -73,7 +61,7 @@ $result = [UIntPtr]::Zero
 $env:PATH = [Environment]::GetEnvironmentVariable("PATH","Machine") + ";" +
             [Environment]::GetEnvironmentVariable("PATH","User")
 
-# 5. Validar
+# 4. Validar
 Write-Host "  Validando instalacao..." -NoNewline
 try {
     $installed = & "$installDir\qactl.exe" --version 2>&1
