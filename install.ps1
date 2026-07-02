@@ -5,12 +5,11 @@ $repo      = "rafaelncintra/qactl-releases"
 $installDir = "$env:APPDATA\qactl"
 
 Write-Host ""
-Write-Host "  qactl" -ForegroundColor Cyan -NoNewline
-Write-Host " — instalador"
-Write-Host "  ─────────────────────────────────────────"
+Write-Host "  qactl - instalador" -ForegroundColor Cyan
+Write-Host "  -----------------------------------------"
 Write-Host ""
 
-# 1. Download (URL permanente do ultimo release — sem chamada de API)
+# 1. Download (URL permanente do ultimo release - sem chamada de API)
 $url    = "https://github.com/$repo/releases/latest/download/qactl.exe"
 $tmpExe = Join-Path $env:TEMP "qactl-download.exe"
 Write-Host "  Baixando qactl.exe..." -NoNewline
@@ -78,8 +77,8 @@ try {
 }
 
 Write-Host ""
-Write-Host "  ✓ $installed instalado com sucesso!" -ForegroundColor Green
+Write-Host "  [OK] $installed instalado com sucesso!" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Proximo passo — abra um novo terminal e rode:" -ForegroundColor Yellow
+Write-Host "  Proximo passo - abra um novo terminal e rode:" -ForegroundColor Yellow
 Write-Host "  qactl configure" -ForegroundColor White
 Write-Host ""
