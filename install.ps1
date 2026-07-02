@@ -1,5 +1,5 @@
 # qactl installer
-# Uso: irm https://raw.githubusercontent.com/rafaelncintra/qactl-releases/main/install.ps1 | iex
+# Uso: irm https://cdn.jsdelivr.net/gh/rafaelncintra/qactl-releases@main/install.ps1 | iex
 
 $repo      = "rafaelncintra/qactl-releases"
 $installDir = "$env:APPDATA\qactl"
